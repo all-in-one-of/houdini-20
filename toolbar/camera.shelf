@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="selcam_f" label="Select Camera Forward" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import toolutils as ts
+viewer = ts.sceneViewer()
+viewport = viewer.curViewport()
+
+cams = hou.root().recursiveGlob('*', hou.nodeTypeFilter.ObjCamera)
+cams = [i.path() for i in cams if i.type().name()=='cam']
+try:
+    cams.pop(cams.index('/obj/ipr_camera'))
+except:
+    pass
+
+if cams:
+    if len(cams) == 1:
+        nextcam = cams[0]
+    else:
+        if hou.expandString('$CAM'):
+            thiscam = hou.expandString('$CAM')
+            try:
+                idx = cams.index(thiscam)
+                if viewport.camera():
+                    idx += 1
+                nextcam = cams[idx]
+            except (IndexError, ValueError):
+                nextcam = cams[0]
+        else:
+            nextcam = cams[0]    
+    
+    hou.hscript('set -g CAM = {0}'.format(nextcam))
+    mycam = hou.node(nextcam)
+    viewport.setCamera(mycam)
+]]></script>
+  </tool>
+
+  <tool name="selcam_b" label="Select Camera Backward" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import toolutils as ts
+viewer = ts.sceneViewer()
+viewport = viewer.curViewport()
+
+cams = hou.root().recursiveGlob('*', hou.nodeTypeFilter.ObjCamera)
+cams = [i.path() for i in cams if i.type().name()=='cam']
+try:
+    cams.pop(cams.index('/obj/ipr_camera'))
+except:
+    pass
+
+if cams:
+    if len(cams) == 1:
+        nextcam = cams[0]
+    else:
+        if hou.expandString('$CAM'):
+            thiscam = hou.expandString('$CAM')
+            try:
+                idx = cams.index(thiscam)
+                if viewport.camera():
+                    idx -= 1
+                nextcam = cams[idx]
+            except (IndexError, ValueError):
+                nextcam = cams[0]
+        else:
+            nextcam = cams[0]    
+    
+    hou.hscript('set -g CAM = {0}'.format(nextcam))
+    mycam = hou.node(nextcam)
+    viewport.setCamera(mycam)
+]]></script>
+  </tool>
+
+  <toolshelf name="camera" label="Camera">
+    <memberTool name="selcam_f"/>
+    <memberTool name="selcam_b"/>
+    <memberTool name="camera_bake"/>
+    <memberTool name="cam_to_nuke"/>
+  </toolshelf>
+
+  <tool name="cam_to_nuke" label="Camera To Nuke" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import os
+
+copy_script = \
+'''
+Camera2 {{
+    inputs 0
+    name {name}
+    {parms}
+    rot_order XYZ
+}}
+'''
+
+copy_scripts = []
+for node in hou.selectedNodes():
+    name = node.name()
+
+    
+    parms = []
+    parm_convert = {'t':'translate', 'r':'rotate', 'focal':'focal', 'aperture':'haperture'}
+    for hou_parm, nuke_parm  in parm_convert.items():
+        curves = []
+        for parm in node.parmTuple(hou_parm):
+            
+            vals = []
+            if parm.keyframes():
+                for k in parm.keyframes():
+                    vals.append('x{frame} {val}'.format(frame=int(k.frame()), val=k.value()))
+                curve = ' '.join(['{curve', ' '.join(vals), '}'])
+            else:
+                curve = str(int(parm.eval()))
+    
+            curves.append(curve)
+        parmstr = nuke_parm + ' ' + '{' + ' '.join(curves) + '}'
+        parms.append(parmstr)
+    copy_scripts.append(copy_script.format(name=name, parms='\n'.join(parms)))
+
+# TBD : Copy to windows clipboard
+with open('c:/tmp/houdini_cam.nk', 'w') as f:
+    f.write(' '.join(copy_scripts))
+
+os.system('start c:/tmp/houdini_cam.nk')
+]]></script>
+  </tool>
+
+  <tool name="camera_bake" label="Camera Bake" icon="MISC_python">
+    <script scriptType="python"><![CDATA[srccams = [i for i in hou.selectedNodes() if i.type().name()=='cam']
+for srccam in srccams:
+    start, end = hou.expandString("$FSTART"), hou.expandString("$FEND")    
+    ok, val = hou.ui.readInput('frame range', initial_contents='{0}, {1}'.format(start, end))
+    print(ok, val)
+
+    bakecam = hou.node('/obj').createNode('cam')
+    bakecam.setName(srccam.name()+'_bake')
+    bakecam.setPosition(srccam.position()+hou.Vector2(2,0))
+    bakecam.setColor(hou.Color((pow(0.322, 0.4545),pow(0.126,0.4545),pow(0.028,0.4545))))
+
+    if ',' in val:
+        start, end = [int(i.strip()) for i in val.split(',')]
+    else:
+        val = int(val.strip())
+        start, end = val, val
+
+    for f in range(start, end+1):
+        hou.setFrame(f)
+        t = hou.time()
+
+        tx, ty, tz = srccam.worldTransform().extractTranslates()
+        rx, ry, rz = srccam.worldTransform().extractRotates()
+
+        transparms = {}
+        transparms['tx'] = tx
+        transparms['ty'] = ty
+        transparms['tz'] = tz
+        transparms['rx']= rx
+        transparms['ry']= ry
+        transparms['rz']= rz
+        otherparms = ['iconscale', 'resx', 'resy', 'focal', 'aperture', 'near', 'far']
+
+        for pname in transparms:
+            bakecam.parm(pname).setKeyframe(hou.Keyframe(transparms[pname], t))
+        for pname in otherparms:
+            bakecam.parm(pname).setKeyframe(hou.Keyframe(srccam.parm(pname).eval(), t))
+
+hou.setFrame(1)
+]]></script>
+  </tool>
+</shelfDocument>

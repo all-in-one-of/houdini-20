@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="mantra" label="Mantra">
+    <memberTool name="play_mantra"/>
+    <memberTool name="copy_for_nuke"/>
+    <memberTool name="copyFusion"/>
+  </toolshelf>
+
+  <tool name="play_mantra" label="Play Mantra" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import mantra
+reload(mantra)
+
+selNodes = hou.selectedNodes()
+for node in selNodes:
+#    if node.type().name() == 'ifd':
+    try:
+        mantra.play(node, 0)
+    except:
+        pass
+#    else:
+#        print('not a mantra node.')
+        
+
+]]></script>
+  </tool>
+
+  <tool name="play_mantra_half" label="Half Play" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import mantra
+reload(mantra)
+
+selNodes = hou.selectedNodes()
+for node in selNodes:
+    if node.type().name() == 'ifd':
+        mantra.play(node, 1)
+    else:
+        print('not a mantra node.')
+
+]]></script>
+  </tool>
+
+  <tool name="play_mantra_quater" label="Quater Play" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import mantra
+reload(mantra)
+
+selNodes = hou.selectedNodes()
+for node in selNodes:
+    if node.type().name() == 'ifd':
+        mantra.play(node, 2)
+    else:
+        print('not a mantra node.')
+
+]]></script>
+  </tool>
+
+  <tool name="copy_for_nuke" label="Copy Nuke" icon="MISC_python">
+    <script scriptType="python"><![CDATA[#import win32clipboard
+import mantra
+reload(mantra)
+
+selNodes = hou.selectedNodes()
+
+outlist = []
+copynum = 0
+for node in selNodes:
+    if node.type().name() == 'ifd':
+        path = node.parm('vm_picture').evalAsString()
+        nukepath = mantra.pathForNuke(path)
+        if node.parm('trange').evalAsString() != 'off':
+            first = node.parm('f1').evalAsString()
+            last = node.parm('f2').evalAsString()
+        else:
+            first, last = '1', '1'
+        strlist = ["Read { file", nukepath, "first", first, "last", last, "}"]
+        string = " ".join(strlist)
+
+        outlist.append(string)
+        copynum += 1
+
+cliptext = "\n".join(outlist)
+print(cliptext)
+#win32clipboard.OpenClipboard()
+#win32clipboard.EmptyClipboard()
+#win32clipboard.SetClipboardText(cliptext)
+#win32clipboard.CloseClipboard()
+]]></script>
+  </tool>
+
+  <tool name="copy_for_fusion" label="Go Fusion" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import win32clipboard
+import mantra
+import classbox
+import _workingScript
+reload(mantra)
+reload(classbox)
+reload(_workingScript)
+
+selNodes = hou.selectedNodes()
+
+script = mantra.pathForFusion(selNodes)
+
+win32clipboard.OpenClipboard()
+win32clipboard.EmptyClipboard()
+win32clipboard.SetClipboardText(script)
+win32clipboard.CloseClipboard()]]></script>
+  </tool>
+
+  <tool name="copyFusion" label="Copy Fusion" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import win32clipboard
+import mantra
+import classbox
+reload(mantra)
+reload(classbox)
+
+selNodes = hou.selectedNodes()
+
+script = mantra.copyFusion(selNodes)
+
+if not script == "":
+    win32clipboard.OpenClipboard()
+    win32clipboard.EmptyClipboard()
+    win32clipboard.SetClipboardText(script)
+    win32clipboard.CloseClipboard()]]></script>
+  </tool>
+</shelfDocument>

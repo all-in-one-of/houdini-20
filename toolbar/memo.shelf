@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="memo" label="Memo">
+    <memberTool name="memo_show"/>
+    <memberTool name="memo_shot"/>
+    <memberTool name="memo_home"/>
+  </toolshelf>
+
+  <tool name="memo_shot" label="Shot" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import os
+import filebox
+reload(filebox)
+
+root = hou.expandString('$SHOTPATH')
+
+if root:
+    leaf = '/memo/shot_memo.txt'
+    memo = root+leaf
+    
+    if not os.path.isfile(memo):
+        open(memo, 'w').close()
+    
+    filebox.incBackup(memo)
+
+    hou.hscript('unix "start {0}"'.format(memo))
+
+else:
+    print('$SHOT not found')
+]]></script>
+  </tool>
+
+  <tool name="memo_shot0" label="Memo(SHOT)" icon="MISC_python">
+    <script scriptType="python"><![CDATA[]]></script>
+  </tool>
+
+  <tool name="memo_shot1" label="Memo(SHOT)" icon="MISC_python">
+    <script scriptType="python"><![CDATA[]]></script>
+  </tool>
+
+  <tool name="memo_home" label="Home" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import os
+import filebox
+reload(filebox)
+
+d = hou.homeHoudiniDirectory()
+f = 'home_memo.txt'
+memo = '/'.join([d,f])
+print(memo)
+if not os.path.isfile(memo):
+    open(memo, 'w').close()
+
+filebox.incBackup(memo)
+
+hou.hscript('unix "start {0}"'.format(memo))]]></script>
+  </tool>
+
+  <tool name="memo_show" label="Show" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import os
+import filebox
+reload(filebox)
+
+root = hou.expandString('$SHOWPATH')
+
+if root:
+    leaf = '/common/memo/prj_memo.txt'
+    memo = root+leaf
+
+    if not os.path.isfile(memo):
+        open(memo, 'w').close()
+    
+    filebox.incBackup(memo)
+    
+    hou.hscript('unix "start {0}"'.format(memo))
+    
+else:
+    print('$PRJ not found')]]></script>
+  </tool>
+</shelfDocument>

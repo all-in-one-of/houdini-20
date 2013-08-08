@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="path" label="Path">
+    <memberTool name="showpath"/>
+    <memberTool name="seqpath"/>
+    <memberTool name="scenepath"/>
+    <memberTool name="shotpath"/>
+    <memberTool name="job"/>
+    <memberTool name="out"/>
+    <memberTool name="hip"/>
+  </toolshelf>
+
+  <tool name="showpath" label="SHOWPATH" icon="PLASMA_App">
+    <script scriptType="hscript"><![CDATA[unix "start $SHOWPATH"]]></script>
+  </tool>
+
+  <tool name="seqpath" label="SEQPATH" icon="PLASMA_App">
+    <script scriptType="hscript"><![CDATA[unix "start $SEQPATH"]]></script>
+  </tool>
+
+  <tool name="scenepath" label="SCENEPATH" icon="PLASMA_App">
+    <script scriptType="hscript"><![CDATA[unix "start $SCENEPATH"]]></script>
+  </tool>
+
+  <tool name="shotpath" label="SHOTPATH" icon="PLASMA_App">
+    <script scriptType="hscript"><![CDATA[unix "start $SHOTPATH"]]></script>
+  </tool>
+
+  <tool name="job" label="JOB" icon="PLASMA_App">
+    <script scriptType="hscript"><![CDATA[unix "start $JOB"]]></script>
+  </tool>
+
+  <tool name="hip" label="HIP" icon="PLASMA_App">
+    <script scriptType="hscript"><![CDATA[unix "start $HIP"]]></script>
+  </tool>
+
+  <tool name="out" label="OUT" icon="PLASMA_App">
+    <script scriptType="hscript"><![CDATA[unix "start $OUT"]]></script>
+  </tool>
+</shelfDocument>

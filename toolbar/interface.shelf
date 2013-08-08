@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="interface" label="Interface">
+    <memberTool name="mergeall"/>
+    <memberTool name="switch_all"/>
+    <memberTool name="infoView"/>
+    <memberTool name="set_all_flag"/>
+  </toolshelf>
+
+  <tool name="mergeall" label="Merge All" icon="MISC_python">
+    <script scriptType="python"><![CDATA[sel = hou.selectedNodes()
+
+parents = [node.parent().path() for node in sel]
+numparents = len(set(parents))
+
+if numparents == 1:
+    mynet = hou.node(set(parents).pop())
+
+    if mynet.type().name() == 'geo': # will add many type support
+        merge = mynet.createNode('merge')
+    
+        for i, node in enumerate(sel):
+            merge.setInput(i, node)
+    
+        merge.moveToGoodPosition()
+
+
+    
+]]></script>
+  </tool>
+
+  <tool name="selcam0" label="Select Camera" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import toolutils as ts
+
+viewer = ts.sceneViewer()
+viewport = viewer.curViewport()
+
+camlist = hou.hscript('opfind -t cam')[0].split('\n')
+camlist.pop() #delete last no camera item
+striplist = [cam.strip() for cam in camlist]
+culllist = [cam for cam in striplist if cam != '/obj/ipr_camera']
+numcam = len(culllist)
+
+
+if numcam > 1:
+    selname = hou.ui.selectNode(node_type_filter = hou.nodeTypeFilter.ObjCamera)
+    mycam = hou.node(selname)
+    viewport.setCamera(mycam)
+elif numcam == 1:
+    mycam = hou.node(culllist[0])
+    viewport.setCamera(mycam)
+else:
+    pass
+
+]]></script>
+  </tool>
+
+  <tool name="infoView0" label="Info Viewer" icon="MISC_python">
+    <script scriptType="python"><![CDATA[viewDict={}
+viewDict['']=hou.paneTabType]]></script>
+  </tool>
+
+  <tool name="infoView1" label="Info Viewer" icon="MISC_python">
+    <script scriptType="python"><![CDATA[viewDict={}
+viewDict['Object']=hou.paneTabType.BundleList
+viewDict['']=hou.paneTabType.DetailsView
+viewDict['']=hou.paneTabType.MaterialPalette
+viewDict['']=hou.paneTabType.OutputViewer
+#viewDict['']=hou.paneTabType.
+]]></script>
+  </tool>
+
+  <tool name="infoView" label="Info Viewer" icon="MISC_python">
+    <script scriptType="python"><![CDATA[# Hotkeys -> Global -> `(overwrite)
+
+pantype = hou.paneTabType
+viewDict={
+    'Object': pantype.BundleList,
+    'Sop'   : pantype.DetailsView,
+    'Shop'  : pantype.MaterialPalette,
+    'Driver': pantype.OutputViewer,
+    'Dop'   : pantype.DetailsView,
+    'Chop'  : pantype.ChannelViewer,
+    'Pop'   : pantype.DetailsView,
+    'Cop2'  : pantype.CompositorViewer
+}
+
+
+exist = [pane for pane in hou.ui.floatingPanels() if pane.name()=='infoView']
+try:
+    exist = exist.pop()
+    exist.close()
+except:
+    paneName = hou.hscriptExpression('mousepane()').split('.')[-1] 
+    pane = hou.ui.findPaneTab(paneName)
+    if pane:
+        categoryName = pane.currentNode().type().category().name()
+        try:
+            viewerType = viewDict[categoryName]
+            newPanel = hou.ui.curDesktop().createFloatingPanel(viewerType)
+            newPanel.setName('infoView')
+            newPanel.paneTabs()[0].setCurrentNode(pane.currentNode())
+        except:
+            pass
+
+]]></script>
+  </tool>
+
+  <tool name="switch_all" label="Switch All" icon="MISC_python">
+    <script scriptType="python"><![CDATA[sel = hou.selectedNodes()
+
+parents = [node.parent().path() for node in sel]
+numparents = len(set(parents))
+
+if numparents == 1:
+    mynet = hou.node(set(parents).pop())
+
+    if mynet.type().name() == 'geo': # will add many type support
+        merge = mynet.createNode('switch')
+    
+        for i, node in enumerate(sel):
+            merge.setInput(i, node)
+    
+        merge.moveToGoodPosition()
+
+]]></script>
+  </tool>
+
+  <tool name="set_all_flag" label="Set All Flag" icon="MISC_python">
+    <helpText><![CDATA[sels = hou.selectedNodes()
+
+if sels:
+    sel = sels[0]
+    if not sel.isDisplayFlagSet() or not sel.isRenderFlagSet():    
+        sel.setDisplayFlag(True)
+        sel.setRenderFlag(True)
+    elif sel.inputs():
+        input0 = sel.inputs()[0]
+        input0.setDisplayFlag(True)
+        input0.setRenderFlag(True)
+]]></helpText>
+    <toolMenuContext name="network">
+      <contextNetType>SOP</contextNetType>
+    </toolMenuContext>
+    <script scriptType="python"><![CDATA[# Hotkeys -> NetworkEditor -> 3
+import houbox
+reload(houbox)
+def main():
+    try:
+        sel = hou.selectedNodes()[0]
+    except:
+        return
+    setflag={
+        'Object': obj,
+        'Sop'   : sop,
+        'Pop'   : pop,
+        'Dop'   : dop,
+        'Cop2'  : cop,
+    }
+    category = houbox.currentCategory()
+    #print(category)
+    try:
+        setflag[category](sel)
+    except:
+        raise
+
+def obj(sel):
+    if not sel.isDisplayFlagSet():
+        sel.setDisplayFlag(True)
+    else:
+        sel.setDisplayFlag(False)
+def sop(sel):
+    if sel:
+        if not sel.isDisplayFlagSet() or not sel.isRenderFlagSet():    
+            sel.setDisplayFlag(True)
+            sel.setRenderFlag(True)
+        elif sel.inputs():
+            input = sel.inputs()[0]
+            input.setDisplayFlag(True)
+            input.setRenderFlag(True)
+def pop(sel):
+    if not sel.isRenderFlagSet():
+        sel.setRenderFlag(True)
+    else:
+        if sel.inputs():
+            sel.inputs()[0].setRenderFlag(True)
+            return
+        sel.setDisplayFlag(False)
+def dop(sel):
+    if not sel.isDisplayFlagSet():
+        sel.setDisplayFlag(True)
+    else:
+        if sel.inputs():
+            sel.inputs()[0].setDisplayFlag(True)
+            return
+        sel.setDisplayFlag(False)
+def cop(sel):
+    if sel:
+        if not sel.isDisplayFlagSet() or not sel.isRenderFlagSet():
+            sel.setDisplayFlag(True)
+            sel.setRenderFlag(True)
+            if sel.inputs():
+                input = sel.inputs()[0]
+                input.setDisplayFlag(False)
+                input.setRenderFlag(False)
+        elif sel.inputs():
+            sel.setDisplayFlag(False)
+            sel.setRenderFlag(False)
+            if sel.inputs():
+                input = sel.inputs()[0]
+                input.setDisplayFlag(True)
+                input.setRenderFlag(True)
+
+
+main()]]></script>
+  </tool>
+</shelfDocument>

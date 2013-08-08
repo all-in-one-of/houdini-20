@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="save" label="Save">
+    <memberTool name="mysave"/>
+    <memberTool name="incsave"/>
+  </toolshelf>
+
+  <tool name="mysave" label="MySave" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import houbox
+reload(houbox)
+houbox.save()]]></script>
+  </tool>
+</shelfDocument>
