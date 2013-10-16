@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <tool name="find_att_or_grp" label="Find Attribute Or Group" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import ybox
+reload(ybox)
+
+def main():
+    node = ybox.currentNode()
+
+    ok, read = hou.ui.readInput("type name for find", ("Cancle", "OK"), default_choice=1)
+    if not ok:
+        return
+
+    context = node.parent()   
+    changedNodes = []
+    for n in context.children():     
+        if n.geometry().findPointAttrib(read):
+            n.setColor(hou.Color((1.0,0.0,0.0)))
+            changedNodes.append(n.name())
+    print("color chaged : {0}".format(', '.join(changedNodes)))
+
+main()]]></script>
+  </tool>
+</shelfDocument>
