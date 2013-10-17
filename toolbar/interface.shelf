@@ -10,6 +10,9 @@
     <memberTool name="switch_all"/>
     <memberTool name="infoView"/>
     <memberTool name="set_all_flag"/>
+    <memberTool name="goto_obj"/>
+    <memberTool name="goto_out"/>
+    <memberTool name="goto_shop"/>
   </toolshelf>
 
   <tool name="mergeall" label="Merge All" icon="MISC_python">
@@ -148,12 +151,15 @@ if sels:
       <contextNetType>SOP</contextNetType>
     </toolMenuContext>
     <script scriptType="python"><![CDATA[# Hotkeys -> NetworkEditor -> 3
-import houbox
-reload(houbox)
+
 def main():
     try:
-        sel = hou.selectedNodes()[0]
+        sels = hou.selectedNodes()
+        sel = hou.selectedNodes()[-1]
+        #print(sels, sel)
     except:
+        raise
+        print("something wrong")
         return
     setflag={
         'Object': obj,
@@ -162,18 +168,25 @@ def main():
         'Dop'   : dop,
         'Cop2'  : cop,
     }
-    category = houbox.currentCategory()
+    category = sel.type().category().name()
     #print(category)
     try:
-        setflag[category](sel)
-    except:
-        raise
+        if category == 'Object': # allow multiple selection
+            setflag[category](sels)
+        else:
+            setflag[category](sel)
+    except KeyError as e:
+        print("It's {0}, cannot set display node!".format(e))
 
-def obj(sel):
-    if not sel.isDisplayFlagSet():
-        sel.setDisplayFlag(True)
-    else:
-        sel.setDisplayFlag(False)
+
+
+def obj(sels):
+    sel = sels[-1]
+    for node in sels:
+        if not sel.isDisplayFlagSet():
+            node.setDisplayFlag(True)
+        else:
+            node.setDisplayFlag(False)
 def sop(sel):
     if sel:
         if not sel.isDisplayFlagSet() or not sel.isRenderFlagSet():    
@@ -218,5 +231,26 @@ def cop(sel):
 
 
 main()]]></script>
+  </tool>
+
+  <tool name="goto_obj" label="Go To OBJ" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import ybox
+reload(ybox)
+
+ybox.gotoCategory("obj")]]></script>
+  </tool>
+
+  <tool name="goto_shop" label="Go To Shop" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import ybox
+reload(ybox)
+
+ybox.gotoCategory("shop")]]></script>
+  </tool>
+
+  <tool name="goto_out" label="Go To Out" icon="MISC_python">
+    <script scriptType="python"><![CDATA[import ybox
+reload(ybox)
+
+ybox.gotoCategory("out")]]></script>
   </tool>
 </shelfDocument>
